@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LeanBulk">
+<meta name="theme-color" content="#080808">
+<title>Lean Bulk Meal Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#080808; --bg2:#0f0f0f; --surface:#141414; --card:#1a1a1a; --border:#252525;
+  --accent:#ff3c00; --gold:#f0c040; --text:#f5f5f5; --muted:#555; --muted2:#888;
+  --green:#39ff14; --protein:#00bfff; --carbs:#39ff14; --fat:#f0c040;
+  --safe:env(safe-area-inset-bottom,0px);
+}
+body { background:var(--bg); color:var(--text); font-family:'Barlow',sans-serif; min-height:100vh; padding-bottom:calc(72px + var(--safe)); overflow-x:hidden; }
+
+/* INSTALL BANNER */
+#install-banner { display:none; position:fixed; bottom:0; left:0; right:0; background:linear-gradient(135deg,#1c1c1c,#222); border-top:2px solid var(–accent); padding:14px 18px calc(14px + var(–safe)); z-index:999; gap:12px; align-items:center; }
+#install-banner.show { display:flex; }
+#install-banner p { flex:1; font-size:12px; color:var(–muted2); line-height:1.5; }
+#install-banner p strong { color:var(–text); display:block; font-size:13px; margin-bottom:1px; }
+.btn-install { background:var(–accent); color:#fff; border:none; padding:10px 16px; font-family:‘Barlow Condensed’,sans-serif; font-size:15px; font-weight:700; letter-spacing:1px; border-radius:6px; cursor:pointer; white-space:nowrap; }
+.btn-dismiss { background:none; border:none; color:var(–muted); font-size:20px; cursor:pointer; padding:4px; }
+
+/* HERO */
+.hero { position:relative; background:var(–bg); overflow:hidden; padding:52px 20px 24px; border-bottom:1px solid var(–border); }
+.hero-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(255,60,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,60,0,0.05) 1px,transparent 1px); background-size:28px 28px; }
+.hero-glow { position:absolute; top:-60px; right:-60px; width:280px; height:280px; background:radial-gradient(circle,rgba(255,60,0,0.18) 0%,transparent 65%); pointer-events:none; }
+.hero-glow2 { position:absolute; bottom:-40px; left:-30px; width:180px; height:180px; background:radial-gradient(circle,rgba(57,255,20,0.06) 0%,transparent 65%); pointer-events:none; }
+.hero-tag { font-family:‘Share Tech Mono’,monospace; font-size:10px; letter-spacing:3px; color:var(–accent); text-transform:uppercase; margin-bottom:8px; position:relative; }
+.hero-title { font-family:‘Barlow Condensed’,sans-serif; font-size:54px; font-weight:900; line-height:0.88; letter-spacing:-1px; text-transform:uppercase; position:relative; }
+.hero-title .fire { color:var(–accent); }
+.hero-title .thin { font-weight:400; color:var(–muted2); font-size:40px; }
+.hero-pills { display:flex; gap:8px; margin-top:14px; position:relative; flex-wrap:wrap; }
+.hero-pill { font-family:‘Share Tech Mono’,monospace; font-size:9px; letter-spacing:2px; color:var(–muted2); background:rgba(255,255,255,0.04); border:1px solid var(–border); padding:4px 10px; border-radius:3px; }
+.hero-pill span { color:var(–accent); }
+
+/* DASHBOARD */
+.dashboard { background:var(–bg2); border-bottom:1px solid var(–border); padding:18px 20px; }
+.dash-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.dash-title { font-family:‘Share Tech Mono’,monospace; font-size:9px; letter-spacing:3px; color:var(–muted); text-transform:uppercase; }
+.live { display:flex; align-items:center; gap:5px; font-family:‘Share Tech Mono’,monospace; font-size:8px; letter-spacing:2px; color:var(–green); }
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(–green); box-shadow:0 0 6px var(–green); animation:pulse 2s infinite; }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.cal-row { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+.ring-wrap { position:relative; width:84px; height:84px; flex-shrink:0; }
+.ring-wrap svg { transform:rotate(-90deg); }
+.ring-bg { fill:none; stroke:var(–border); stroke-width:7; }
+.ring-fill { fill:none; stroke:var(–accent); stroke-width:7; stroke-linecap:round; stroke-dasharray:238; stroke-dashoffset:238; transition:stroke-dashoffset .6s ease; filter:drop-shadow(0 0 5px rgba(255,60,0,.7)); }
+.ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring-num { font-family:‘Barlow Condensed’,monospace; font-size:20px; font-weight:900; color:var(–accent); line-height:1; }
+.ring-lbl { font-family:‘Share Tech Mono’,monospace; font-size:7px; color:var(–muted); letter-spacing:1px; }
+.cal-text { flex:1; }
+.cal-main { font-family:‘Barlow Condensed’,sans-serif; font-size:11px; font-weight:700; letter-spacing:3px; color:var(–muted); text-transform:uppercase; margin-bottom:3px; }
+.cal-rem { font-family:‘Barlow Condensed’,sans-serif; font-size:30px; font-weight:900; color:var(–text); line-height:1; }
+.cal-rem span { color:var(–muted); font-size:13px; font-weight:400; }
+.cal-goal { font-family:‘Share Tech Mono’,monospace; font-size:9px; color:var(–muted); margin-top:4px; }
+
+.mbars { display:flex; flex-direction:column; gap:9px; }
+.mbar { display:grid; grid-template-columns:58px 1fr 68px; align-items:center; gap:8px; }
+.mbar-lbl { font-family:‘Share Tech Mono’,monospace; font-size:8px; letter-spacing:1px; color:var(–muted); text-transform:uppercase; }
+.mbar-track { height:5px; background:var(–border); border-radius:3px; overflow:hidden; }
+.mbar-fill { height:100%; border-radius:3px; width:0%; transition:width .5s cubic-bezier(.4,0,.2,1); }
+.mbar-fill.p { background:var(–protein); box-shadow:0 0 5px rgba(0,191,255,.5); }
+.mbar-fill.c { background:var(–carbs); box-shadow:0 0 5px rgba(57,255,20,.4); }
+.mbar-fill.f { background:var(–fat); box-shadow:0 0 5px rgba(240,192,64,.4); }
+.mbar-num { font-family:‘Share Tech Mono’,monospace; font-size:8px; color:var(–muted2); text-align:right; }
+
+/* DATE BAR */
+.date-bar { background:var(–surface); border-bottom:1px solid var(–border); padding:10px 20px; display:flex; justify-content:space-between; align-items:center; }
+.date-txt { font-family:‘Share Tech Mono’,monospace; font-size:10px; color:var(–muted2); letter-spacing:1px; }
+.date-txt span { color:var(–accent); }
+.reset-btn { font-family:‘Barlow Condensed’,sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; color:var(–muted); background:none; border:1px solid var(–border); padding:5px 12px; border-radius:4px; cursor:pointer; text-transform:uppercase; transition:all .2s; }
+.reset-btn:active { border-color:var(–accent); color:var(–accent); }
+
+/* SECTION HEADER */
+.sec-hdr { padding:18px 20px 10px; display:flex; align-items:center; gap:10px; }
+.sec-line { flex:1; height:1px; background:linear-gradient(90deg,var(–border),transparent); }
+.sec-title { font-family:‘Barlow Condensed’,sans-serif; font-size:11px; font-weight:800; letter-spacing:4px; color:var(–muted); text-transform:uppercase; }
+.sec-hint { font-family:‘Share Tech Mono’,monospace; font-size:8px; color:var(–muted); }
+
+/* MEAL CARDS */
+.meals-wrap { padding:0 14px; }
+.meal-card { background:var(–card); border:1px solid var(–border); border-radius:10px; margin-bottom:10px; overflow:hidden; position:relative; transition:border-color .2s,box-shadow .2s; }
+.meal-card::before { content:’’; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(–border); transition:background .25s,box-shadow .25s; border-radius:3px 0 0 3px; }
+.meal-card.eaten::before { background:var(–green); box-shadow:0 0 10px rgba(57,255,20,.5); }
+.meal-card.open { border-color:rgba(255,60,0,.3); box-shadow:0 0 18px rgba(255,60,0,.07); }
+.meal-card.open::before { background:var(–accent); box-shadow:0 0 10px rgba(255,60,0,.5); }
+
+.meal-head { display:flex; align-items:center; padding:12px 14px 12px 18px; gap:10px; cursor:pointer; user-select:none; }
+.eaten-btn { width:26px; height:26px; border-radius:50%; border:2px solid var(–border); background:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; font-size:12px; color:transparent; }
+.meal-card.eaten .eaten-btn { border-color:var(–green); background:rgba(57,255,20,.1); color:var(–green); box-shadow:0 0 8px rgba(57,255,20,.3); }
+.meal-time { font-family:‘Share Tech Mono’,monospace; font-size:10px; color:var(–accent); letter-spacing:1px; flex-shrink:0; }
+.meal-info { flex:1; min-width:0; }
+.meal-name { font-family:‘Barlow Condensed’,sans-serif; font-size:18px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(–text); line-height:1.1; }
+.meal-desc { font-size:10px; color:var(–muted); margin-top:1px; }
+.meal-right { text-align:right; flex-shrink:0; }
+.meal-cal { font-family:‘Barlow Condensed’,sans-serif; font-size:26px; font-weight:900; color:var(–accent); line-height:1; }
+.meal-unit { font-family:‘Share Tech Mono’,monospace; font-size:8px; color:var(–muted); letter-spacing:1px; }
+.chevron { color:var(–muted); font-size:9px; transition:transform .25s; flex-shrink:0; }
+.meal-card.open .chevron { transform:rotate(180deg); color:var(–accent); }
+
+.meal-pills { display:flex; gap:5px; padding:0 14px 11px 18px; flex-wrap:wrap; }
+.pill { font-family:‘Share Tech Mono’,monospace; font-size:9px; padding:3px 7px; border-radius:3px; background:rgba(255,255,255,.02); border:1px solid var(–border); }
+.pill.p { color:var(–protein); border-color:rgba(0,191,255,.2); }
+.pill.c { color:var(–carbs); border-color:rgba(57,255,20,.2); }
+.pill.f { color:var(–fat); border-color:rgba(240,192,64,.2); }
+
+.meal-body { display:none; border-top:1px solid var(–border); background:rgba(0,0,0,.2); }
+.meal-card.open .meal-body { display:block; }
+
+.food-list { padding:2px 0; }
+.food-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,.04); gap:10px; }
+.food-row:last-child { border-bottom:none; }
+.food-left { flex:1; min-width:0; }
+.food-name { font-size:13px; font-weight:600; color:var(–text); }
+.food-qty { font-family:‘Share Tech Mono’,monospace; font-size:9px; color:var(–muted); margin-top:2px; }
+.food-macros { text-align:right; font-family:‘Share Tech Mono’,monospace; font-size:9px; line-height:1.9; flex-shrink:0; }
+.fcal { font-family:‘Barlow Condensed’,sans-serif; font-size:14px; font-weight:700; color:var(–text); }
+.fp { color:var(–protein); } .fc { color:var(–carbs); } .ff { color:var(–fat); }
+
+.tip-box { margin:0 14px 14px; padding:10px 13px; background:rgba(255,60,0,.05); border-left:2px solid var(–accent); border-radius:0 6px 6px 0; }
+.tip-label { font-family:‘Barlow Condensed’,sans-serif; font-size:10px; font-weight:800; letter-spacing:3px; color:var(–accent); text-transform:uppercase; margin-bottom:3px; }
+.tip-text { font-size:11px; color:var(–muted2); line-height:1.6; }
+
+/* TOTALS */
+.totals-panel { margin:16px 14px; border:1px solid var(–border); border-radius:10px; overflow:hidden; background:var(–surface); }
+.totals-head { background:linear-gradient(135deg,rgba(255,60,0,.12),transparent); border-bottom:1px solid var(–border); padding:13px 16px; display:flex; align-items:center; gap:10px; }
+.totals-head-title { font-family:‘Barlow Condensed’,sans-serif; font-size:14px; font-weight:900; letter-spacing:4px; color:var(–text); text-transform:uppercase; }
+.totals-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(–border); }
+.total-cell { background:var(–card); padding:14px; }
+.total-cell-label { font-family:‘Share Tech Mono’,monospace; font-size:8px; letter-spacing:2px; color:var(–muted); text-transform:uppercase; margin-bottom:5px; }
+.total-cell-val { font-family:‘Barlow Condensed’,sans-serif; font-size:32px; font-weight:900; line-height:1; }
+.total-cell-val.cal { color:var(–accent); } .total-cell-val.pro { color:var(–protein); }
+.total-cell-val.carb { color:var(–carbs); } .total-cell-val.fat { color:var(–fat); }
+.total-unit { font-size:11px; color:var(–muted); font-weight:400; font-family:‘Barlow’,sans-serif; }
+.total-sub { font-family:‘Share Tech Mono’,monospace; font-size:8px; color:var(–muted); margin-top:2px; }
+
+.note-card { margin:0 14px 16px; padding:13px 15px; background:var(–card); border:1px solid var(–border); border-radius:8px; }
+.note-title { font-family:‘Barlow Condensed’,sans-serif; font-size:11px; font-weight:800; letter-spacing:3px; color:var(–muted); text-transform:uppercase; margin-bottom:7px; }
+.note-text { font-size:11px; color:var(–muted2); line-height:1.7; }
+
+/* WORKOUT TAB */
+.workout-day { margin:0 14px 10px; background:var(–card); border:1px solid var(–border); border-radius:10px; overflow:hidden; }
+.wd-head { display:flex; align-items:center; justify-content:space-between; padding:13px 15px; background:rgba(255,255,255,.02); border-bottom:1px solid var(–border); }
+.wd-title { font-family:‘Barlow Condensed’,sans-serif; font-size:22px; font-weight:900; text-transform:uppercase; letter-spacing:1px; }
+.wd-badge { font-family:‘Share Tech Mono’,monospace; font-size:8px; letter-spacing:2px; color:var(–muted); margin-top:2px; }
+.wtable { width:100%; border-collapse:collapse; font-size:12px; }
+.wtable th { font-family:‘Share Tech Mono’,monospace; font-size:8px; letter-spacing:2px; color:var(–muted); padding:8px 14px; text-align:left; border-bottom:1px solid var(–border); background:rgba(0,0,0,.2); }
+.wtable td { padding:9px 14px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; }
+.wtable tr:last-child td { border-bottom:none; }
+.ex-name { font-weight:600; color:var(–text); font-size:13px; }
+.ex-target { font-family:‘Share Tech Mono’,monospace; font-size:9px; color:var(–accent); margin-top:1px; }
+.ex-reps { font-family:‘Share Tech Mono’,monospace; font-size:10px; color:var(–muted2); text-align:right; white-space:nowrap; }
+
+/* MACROS TAB */
+.mgcard { margin:0 14px 12px; background:var(–card); border:1px solid var(–border); border-radius:10px; padding:16px; }
+.mgcard-title { font-family:‘Barlow Condensed’,sans-serif; font-size:18px; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(–text); margin-bottom:14px; }
+.mgrow { display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid var(–border); }
+.mgrow:last-child { border-bottom:none; }
+.mgdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.mgdot.p { background:var(–protein); box-shadow:0 0 7px rgba(0,191,255,.5); }
+.mgdot.c { background:var(–carbs); box-shadow:0 0 7px rgba(57,255,20,.4); }
+.mgdot.f { background:var(–fat); box-shadow:0 0 7px rgba(240,192,64,.4); }
+.mgrow-body { flex:1; }
+.mgrow-title { font-family:‘Barlow Condensed’,sans-serif; font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+.mgrow-val { font-family:‘Share Tech Mono’,monospace; font-size:9px; margin-top:2px; }
+.mgrow-val.p { color:var(–protein); } .mgrow-val.c { color:var(–carbs); } .mgrow-val.f { color:var(–fat); } .mgrow-val.acc { color:var(–accent); }
+.mgrow-desc { font-size:11px; color:var(–muted2); margin-top:4px; line-height:1.5; }
+
+/* BOTTOM NAV */
+.bottom-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(8,8,8,.97); backdrop-filter:blur(20px); border-top:1px solid var(–border); display:flex; padding:10px 0 calc(10px + var(–safe)); z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; }
+.nav-icon { font-size:20px; }
+.nav-label { font-family:‘Share Tech Mono’,monospace; font-size:8px; letter-spacing:1px; color:var(–muted); text-transform:uppercase; }
+.nav-item.active .nav-label { color:var(–accent); }
+.nav-item.active .nav-icon { filter:drop-shadow(0 0 4px rgba(255,60,0,.6)); }
+
+/* TABS */
+.tab-content { display:none; }
+.tab-content.active { display:block; animation:fadeUp .25s ease; }
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+
+</head>
+<body>
+
+<div id="install-banner">
+  <p><strong>📲 Save to Home Screen</strong>Access your plan offline, anytime</p>
+  <button class="btn-install" id="install-btn">Install App</button>
+  <button class="btn-dismiss" id="dismiss-btn">✕</button>
+</div>
+
+<!-- ══ MEALS TAB ══ -->
+
+<div id="tab-meals" class="tab-content active">
+  <div class="hero">
+    <div class="hero-grid"></div><div class="hero-glow"></div><div class="hero-glow2"></div>
+    <div class="hero-tag">▶ Lean Bulk Protocol · Age 25</div>
+    <div class="hero-title"><div class="fire">LEAN</div><div><span class="thin">BULK</span> PLAN</div></div>
+    <div class="hero-pills">
+      <div class="hero-pill"><span>200</span> LBS</div>
+      <div class="hero-pill">6-DAY <span>PPL</span></div>
+      <div class="hero-pill">5AM <span>TRAINING</span></div>
+      <div class="hero-pill">TDEE <span>+235 CAL</span></div>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="dash-row">
+      <div class="dash-title">Daily Macro Tracker</div>
+      <div class="live"><div class="live-dot"></div>LIVE</div>
+    </div>
+    <div class="cal-row">
+      <div class="ring-wrap">
+        <svg width="84" height="84" viewBox="0 0 84 84">
+          <circle class="ring-bg" cx="42" cy="42" r="38"/>
+          <circle class="ring-fill" id="cal-ring" cx="42" cy="42" r="38"/>
+        </svg>
+        <div class="ring-inner">
+          <div class="ring-num" id="ring-num">0</div>
+          <div class="ring-lbl">KCAL</div>
+        </div>
+      </div>
+      <div class="cal-text">
+        <div class="cal-main">Calories Logged</div>
+        <div class="cal-rem" id="cal-rem">3,720 <span>remaining</span></div>
+        <div class="cal-goal">GOAL: 3,720 KCAL / DAY</div>
+      </div>
+    </div>
+    <div class="mbars">
+      <div class="mbar"><div class="mbar-lbl">Protein</div><div class="mbar-track"><div class="mbar-fill p" id="bar-p"></div></div><div class="mbar-num" id="num-p">0/195g</div></div>
+      <div class="mbar"><div class="mbar-lbl">Carbs</div><div class="mbar-track"><div class="mbar-fill c" id="bar-c"></div></div><div class="mbar-num" id="num-c">0/430g</div></div>
+      <div class="mbar"><div class="mbar-lbl">Fats</div><div class="mbar-track"><div class="mbar-fill f" id="bar-f"></div></div><div class="mbar-num" id="num-f">0/95g</div></div>
+    </div>
+  </div>
+
+  <div class="date-bar">
+    <div class="date-txt">TODAY: <span id="today-date">—</span></div>
+    <button class="reset-btn" onclick="resetDay()">RESET DAY</button>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">Meals</div><div class="sec-line"></div><div class="sec-hint">TAP ✓ WHEN EATEN</div></div>
+
+  <div class="meals-wrap">
+    <!-- M1 -->
+    <div class="meal-card" id="meal-0" data-cal="430" data-pro="35" data-carb="58" data-fat="8">
+      <div class="meal-head" onclick="toggleMeal(0)">
+        <button class="eaten-btn" onclick="event.stopPropagation();toggleEaten(0)">✓</button>
+        <div class="meal-time">05:00</div>
+        <div class="meal-info"><div class="meal-name">Pre-Workout</div><div class="meal-desc">Fast fuel · Light & digestible</div></div>
+        <div class="meal-right"><div class="meal-cal">430</div><div class="meal-unit">KCAL</div></div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="meal-pills"><span class="pill p">P 35g</span><span class="pill c">C 58g</span><span class="pill f">F 8g</span></div>
+      <div class="meal-body">
+        <div class="food-list">
+          <div class="food-row"><div class="food-left"><div class="food-name">Oats (dry)</div><div class="food-qty">¾ cup · 60g</div></div><div class="food-macros"><div class="fcal">230</div><div class="fp">P 6g</div><div class="fc">C 40g</div><div class="ff">F 4g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Whey Protein</div><div class="food-qty">1 scoop · 30g</div></div><div class="food-macros"><div class="fcal">120</div><div class="fp">P 25g</div><div class="fc">C 3g</div><div class="ff">F 2g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Banana</div><div class="food-qty">1 medium · 118g</div></div><div class="food-macros"><div class="fcal">105</div><div class="fp">P 1g</div><div class="fc">C 27g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Almond Butter</div><div class="food-qty">½ tbsp · 8g</div></div><div class="food-macros"><div class="fcal">48</div><div class="fp">P 2g</div><div class="fc">C 2g</div><div class="ff">F 4g</div></div></div>
+        </div>
+        <div class="tip-box"><div class="tip-label">⚡ Coach Tip</div><div class="tip-text">Mix whey into oats. Banana = fast carbs for energy. Eat 25–30 min before training. Keep it light — you don't want to feel heavy under the bar.</div></div>
+      </div>
+    </div>
+    <!-- M2 -->
+    <div class="meal-card" id="meal-1" data-cal="680" data-pro="52" data-carb="90" data-fat="10">
+      <div class="meal-head" onclick="toggleMeal(1)">
+        <button class="eaten-btn" onclick="event.stopPropagation();toggleEaten(1)">✓</button>
+        <div class="meal-time">07:30</div>
+        <div class="meal-info"><div class="meal-name">Post-Workout</div><div class="meal-desc">Recovery window · High carb + protein</div></div>
+        <div class="meal-right"><div class="meal-cal">680</div><div class="meal-unit">KCAL</div></div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="meal-pills"><span class="pill p">P 52g</span><span class="pill c">C 90g</span><span class="pill f">F 10g</span></div>
+      <div class="meal-body">
+        <div class="food-list">
+          <div class="food-row"><div class="food-left"><div class="food-name">Whole Eggs</div><div class="food-qty">3 large</div></div><div class="food-macros"><div class="fcal">210</div><div class="fp">P 18g</div><div class="fc">C 1g</div><div class="ff">F 15g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Egg Whites</div><div class="food-qty">4 large · 120ml</div></div><div class="food-macros"><div class="fcal">68</div><div class="fp">P 14g</div><div class="fc">C 1g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">White Rice (cooked)</div><div class="food-qty">1½ cups · 280g</div></div><div class="food-macros"><div class="fcal">364</div><div class="fp">P 7g</div><div class="fc">C 79g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Spinach (sautéed)</div><div class="food-qty">1 cup · 30g raw</div></div><div class="food-macros"><div class="fcal">7</div><div class="fp">P 1g</div><div class="fc">C 1g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Hot Sauce / Salsa</div><div class="food-qty">2 tbsp</div></div><div class="food-macros"><div class="fcal">10</div><div class="fp">P 0g</div><div class="fc">C 2g</div><div class="ff">F 0g</div></div></div>
+        </div>
+        <div class="tip-box"><div class="tip-label">⚡ Coach Tip</div><div class="tip-text">Most important meal of the day. White rice digests faster post-workout than brown. High carbs replenish glycogen; high protein starts muscle protein synthesis immediately.</div></div>
+      </div>
+    </div>
+    <!-- M3 -->
+    <div class="meal-card" id="meal-2" data-cal="750" data-pro="55" data-carb="85" data-fat="18">
+      <div class="meal-head" onclick="toggleMeal(2)">
+        <button class="eaten-btn" onclick="event.stopPropagation();toggleEaten(2)">✓</button>
+        <div class="meal-time">12:00</div>
+        <div class="meal-info"><div class="meal-name">Lunch</div><div class="meal-desc">Lean protein + complex carbs + veggies</div></div>
+        <div class="meal-right"><div class="meal-cal">750</div><div class="meal-unit">KCAL</div></div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="meal-pills"><span class="pill p">P 55g</span><span class="pill c">C 85g</span><span class="pill f">F 18g</span></div>
+      <div class="meal-body">
+        <div class="food-list">
+          <div class="food-row"><div class="food-left"><div class="food-name">Grilled Chicken Breast</div><div class="food-qty">8 oz · 225g</div></div><div class="food-macros"><div class="fcal">370</div><div class="fp">P 47g</div><div class="fc">C 0g</div><div class="ff">F 8g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Sweet Potato (baked)</div><div class="food-qty">1 large · 200g</div></div><div class="food-macros"><div class="fcal">172</div><div class="fp">P 3g</div><div class="fc">C 40g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Broccoli (steamed)</div><div class="food-qty">1½ cups · 135g</div></div><div class="food-macros"><div class="fcal">46</div><div class="fp">P 4g</div><div class="fc">C 9g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Brown Rice (cooked)</div><div class="food-qty">½ cup · 100g</div></div><div class="food-macros"><div class="fcal">110</div><div class="fp">P 2g</div><div class="fc">C 23g</div><div class="ff">F 1g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Olive Oil (drizzle)</div><div class="food-qty">1 tbsp · 14g</div></div><div class="food-macros"><div class="fcal">119</div><div class="fp">P 0g</div><div class="fc">C 0g</div><div class="ff">F 14g</div></div></div>
+        </div>
+        <div class="tip-box"><div class="tip-label">⚡ Coach Tip</div><div class="tip-text">Meal prep 4–5 chicken breasts and a big pot of rice on Sunday. Lunch is ready all week with zero daily effort. Swap chicken for ground beef or tilapia on rotation.</div></div>
+      </div>
+    </div>
+    <!-- M4 -->
+    <div class="meal-card" id="meal-3" data-cal="420" data-pro="32" data-carb="42" data-fat="14">
+      <div class="meal-head" onclick="toggleMeal(3)">
+        <button class="eaten-btn" onclick="event.stopPropagation();toggleEaten(3)">✓</button>
+        <div class="meal-time">15:00</div>
+        <div class="meal-info"><div class="meal-name">Afternoon Snack</div><div class="meal-desc">High protein · 60-second prep</div></div>
+        <div class="meal-right"><div class="meal-cal">420</div><div class="meal-unit">KCAL</div></div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="meal-pills"><span class="pill p">P 32g</span><span class="pill c">C 42g</span><span class="pill f">F 14g</span></div>
+      <div class="meal-body">
+        <div class="food-list">
+          <div class="food-row"><div class="food-left"><div class="food-name">Greek Yogurt (nonfat)</div><div class="food-qty">1 cup · 227g</div></div><div class="food-macros"><div class="fcal">130</div><div class="fp">P 22g</div><div class="fc">C 9g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Mixed Almonds & Walnuts</div><div class="food-qty">¼ cup · 30g</div></div><div class="food-macros"><div class="fcal">175</div><div class="fp">P 5g</div><div class="fc">C 6g</div><div class="ff">F 16g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Blueberries</div><div class="food-qty">½ cup · 74g</div></div><div class="food-macros"><div class="fcal">42</div><div class="fp">P 1g</div><div class="fc">C 11g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Whey Protein</div><div class="food-qty">½ scoop · 15g</div></div><div class="food-macros"><div class="fcal">60</div><div class="fp">P 12g</div><div class="fc">C 2g</div><div class="ff">F 0g</div></div></div>
+        </div>
+        <div class="tip-box"><div class="tip-label">⚡ Coach Tip</div><div class="tip-text">Mix protein powder into yogurt to thicken it up like a pudding. Top with nuts and berries. Kills mid-afternoon cravings and keeps your protein high without effort.</div></div>
+      </div>
+    </div>
+    <!-- M5 -->
+    <div class="meal-card" id="meal-4" data-cal="850" data-pro="55" data-carb="95" data-fat="28">
+      <div class="meal-head" onclick="toggleMeal(4)">
+        <button class="eaten-btn" onclick="event.stopPropagation();toggleEaten(4)">✓</button>
+        <div class="meal-time">18:30</div>
+        <div class="meal-info"><div class="meal-name">Dinner</div><div class="meal-desc">Biggest meal · Omega-3s + complex carbs</div></div>
+        <div class="meal-right"><div class="meal-cal">850</div><div class="meal-unit">KCAL</div></div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="meal-pills"><span class="pill p">P 55g</span><span class="pill c">C 95g</span><span class="pill f">F 28g</span></div>
+      <div class="meal-body">
+        <div class="food-list">
+          <div class="food-row"><div class="food-left"><div class="food-name">Salmon Fillet</div><div class="food-qty">7 oz · 200g</div></div><div class="food-macros"><div class="fcal">412</div><div class="fp">P 40g</div><div class="fc">C 0g</div><div class="ff">F 26g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Quinoa (cooked)</div><div class="food-qty">1 cup · 185g</div></div><div class="food-macros"><div class="fcal">222</div><div class="fp">P 8g</div><div class="fc">C 39g</div><div class="ff">F 4g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Roasted Brussels Sprouts</div><div class="food-qty">1 cup · 88g</div></div><div class="food-macros"><div class="fcal">56</div><div class="fp">P 4g</div><div class="fc">C 11g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Avocado (half)</div><div class="food-qty">½ medium · 75g</div></div><div class="food-macros"><div class="fcal">120</div><div class="fp">P 1g</div><div class="fc">C 6g</div><div class="ff">F 11g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Lemon + Seasoning</div><div class="food-qty">1 tbsp + spices</div></div><div class="food-macros"><div class="fcal">5</div><div class="fp">P 0g</div><div class="fc">C 1g</div><div class="ff">F 0g</div></div></div>
+        </div>
+        <div class="tip-box"><div class="tip-label">⚡ Coach Tip</div><div class="tip-text">Salmon omega-3s reduce inflammation from hard training. Eat 2–3 hrs before bed. Swap for lean ground beef, flank steak, or shrimp on rotation. Cut carbs by half on rest days.</div></div>
+      </div>
+    </div>
+    <!-- M6 -->
+    <div class="meal-card" id="meal-5" data-cal="390" data-pro="35" data-carb="35" data-fat="12">
+      <div class="meal-head" onclick="toggleMeal(5)">
+        <button class="eaten-btn" onclick="event.stopPropagation();toggleEaten(5)">✓</button>
+        <div class="meal-time">21:00</div>
+        <div class="meal-info"><div class="meal-name">Before Bed</div><div class="meal-desc">Casein-rich · 7-hour overnight muscle repair</div></div>
+        <div class="meal-right"><div class="meal-cal">390</div><div class="meal-unit">KCAL</div></div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="meal-pills"><span class="pill p">P 35g</span><span class="pill c">C 35g</span><span class="pill f">F 12g</span></div>
+      <div class="meal-body">
+        <div class="food-list">
+          <div class="food-row"><div class="food-left"><div class="food-name">Cottage Cheese (low-fat)</div><div class="food-qty">1 cup · 226g</div></div><div class="food-macros"><div class="fcal">180</div><div class="fp">P 25g</div><div class="fc">C 8g</div><div class="ff">F 5g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Natural Peanut Butter</div><div class="food-qty">1 tbsp · 16g</div></div><div class="food-macros"><div class="fcal">95</div><div class="fp">P 4g</div><div class="fc">C 3g</div><div class="ff">F 8g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Casein Protein (opt.)</div><div class="food-qty">½ scoop · 15g</div></div><div class="food-macros"><div class="fcal">60</div><div class="fp">P 12g</div><div class="fc">C 3g</div><div class="ff">F 0g</div></div></div>
+          <div class="food-row"><div class="food-left"><div class="food-name">Rice Cakes</div><div class="food-qty">2 cakes · 18g</div></div><div class="food-macros"><div class="fcal">70</div><div class="fp">P 1g</div><div class="fc">C 15g</div><div class="ff">F 0g</div></div></div>
+        </div>
+        <div class="tip-box"><div class="tip-label">⚡ Coach Tip</div><div class="tip-text">Cottage cheese = natural casein protein. Digests slowly for up to 7 hours and feeds your muscles all night. This is when most of your actual recovery and growth happens.</div></div>
+      </div>
+    </div>
+  </div><!-- /meals-wrap -->
+
+  <div class="sec-hdr"><div class="sec-title">Daily Totals</div><div class="sec-line"></div></div>
+  <div class="totals-panel">
+    <div class="totals-head"><div style="font-size:18px">🔥</div><div class="totals-head-title">Full Day Breakdown</div></div>
+    <div class="totals-grid">
+      <div class="total-cell"><div class="total-cell-label">Total Calories</div><div class="total-cell-val cal">3,720<span class="total-unit"> kcal</span></div><div class="total-sub">~235 above TDEE</div></div>
+      <div class="total-cell"><div class="total-cell-label">Protein</div><div class="total-cell-val pro">195<span class="total-unit">g</span></div><div class="total-sub">0.97g per lb BW</div></div>
+      <div class="total-cell"><div class="total-cell-label">Carbohydrates</div><div class="total-cell-val carb">430<span class="total-unit">g</span></div><div class="total-sub">46% of calories</div></div>
+      <div class="total-cell"><div class="total-cell-label">Fats</div><div class="total-cell-val fat">95<span class="total-unit">g</span></div><div class="total-sub">23% of calories</div></div>
+    </div>
+  </div>
+  <div class="note-card"><div class="note-title">📌 Adjust Over Time</div><div class="note-text">Gaining less than 0.25 lb/week after 2 weeks → add 150 cal (from carbs). Gaining more than 0.75 lb/week → cut 150 cal. Re-check every 4–6 weeks as your weight changes. Confirm your exact TDEE at tdeecalculator.net with your real height.</div></div>
+</div>
+
+<!-- ══ WORKOUT TAB ══ -->
+
+<div id="tab-workout" class="tab-content">
+  <div class="hero" style="padding-bottom:20px">
+    <div class="hero-grid"></div><div class="hero-glow"></div>
+    <div class="hero-tag">▶ 6-Day Push Pull Legs</div>
+    <div class="hero-title"><div class="fire">WORKOUT</div><div class="thin">SPLIT</div></div>
+  </div>
+  <div class="sec-hdr"><div class="sec-title">Weekly Program</div><div class="sec-line"></div></div>
+
+  <div class="workout-day"><div class="wd-head"><div><div class="wd-title" style="color:var(--accent)">Push A</div><div class="wd-badge">MON · CHEST FOCUS</div></div><div style="font-size:22px">🏋️</div></div><table class="wtable"><tr><th>Exercise</th><th>Muscle</th><th>Sets × Reps</th></tr><tr><td><div class="ex-name">Barbell Bench Press</div><div class="ex-target">Primary compound</div></td><td></td><td class="ex-reps">4 × 4–6</td></tr><tr><td><div class="ex-name">Incline DB Press</div><div class="ex-target">Upper chest</div></td><td></td><td class="ex-reps">4 × 8–10</td></tr><tr><td><div class="ex-name">Cable Chest Fly</div><div class="ex-target">Chest isolation</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr><tr><td><div class="ex-name">Seated DB Shoulder Press</div><div class="ex-target">Shoulders</div></td><td></td><td class="ex-reps">3 × 8–10</td></tr><tr><td><div class="ex-name">Lateral Raises</div><div class="ex-target">Side delts</div></td><td></td><td class="ex-reps">4 × 12–15</td></tr><tr><td><div class="ex-name">Tricep Rope Pushdown</div><div class="ex-target">Triceps</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr><tr><td><div class="ex-name">Overhead Tricep Ext.</div><div class="ex-target">Triceps long head</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr></table></div>
+
+  <div class="workout-day"><div class="wd-head"><div><div class="wd-title" style="color:var(--protein)">Pull A</div><div class="wd-badge">TUE · BACK THICKNESS</div></div><div style="font-size:22px">💪</div></div><table class="wtable"><tr><th>Exercise</th><th>Muscle</th><th>Sets × Reps</th></tr><tr><td><div class="ex-name">Barbell Bent-Over Row</div><div class="ex-target">Primary compound</div></td><td></td><td class="ex-reps">4 × 4–6</td></tr><tr><td><div class="ex-name">Seated Cable Row</div><div class="ex-target">Mid back</div></td><td></td><td class="ex-reps">4 × 8–10</td></tr><tr><td><div class="ex-name">Chest-Supported DB Row</div><div class="ex-target">Back</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Lat Pulldown</div><div class="ex-target">Lats</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Face Pulls</div><div class="ex-target">Rear delts</div></td><td></td><td class="ex-reps">4 × 15–20</td></tr><tr><td><div class="ex-name">Barbell Curl</div><div class="ex-target">Biceps</div></td><td></td><td class="ex-reps">3 × 8–10</td></tr><tr><td><div class="ex-name">Hammer Curls</div><div class="ex-target">Biceps/brachialis</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr></table></div>
+
+  <div class="workout-day"><div class="wd-head"><div><div class="wd-title" style="color:var(--carbs)">Legs A</div><div class="wd-badge">WED · QUAD FOCUS</div></div><div style="font-size:22px">🦵</div></div><table class="wtable"><tr><th>Exercise</th><th>Muscle</th><th>Sets × Reps</th></tr><tr><td><div class="ex-name">Barbell Back Squat</div><div class="ex-target">Primary compound</div></td><td></td><td class="ex-reps">4 × 4–6</td></tr><tr><td><div class="ex-name">Leg Press</div><div class="ex-target">Quads</div></td><td></td><td class="ex-reps">4 × 10–12</td></tr><tr><td><div class="ex-name">Walking Lunges</div><div class="ex-target">Quads/glutes</div></td><td></td><td class="ex-reps">3 × 12/leg</td></tr><tr><td><div class="ex-name">Leg Extension</div><div class="ex-target">Quad isolation</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr><tr><td><div class="ex-name">Romanian Deadlift</div><div class="ex-target">Hamstrings</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Seated Calf Raise</div><div class="ex-target">Calves</div></td><td></td><td class="ex-reps">4 × 15–20</td></tr><tr><td><div class="ex-name">Hanging Leg Raise</div><div class="ex-target">Core</div></td><td></td><td class="ex-reps">3 × 15</td></tr></table></div>
+
+  <div class="workout-day"><div class="wd-head"><div><div class="wd-title" style="color:var(--accent)">Push B</div><div class="wd-badge">THU · SHOULDER FOCUS</div></div><div style="font-size:22px">🏋️</div></div><table class="wtable"><tr><th>Exercise</th><th>Muscle</th><th>Sets × Reps</th></tr><tr><td><div class="ex-name">Barbell Overhead Press</div><div class="ex-target">Primary compound</div></td><td></td><td class="ex-reps">4 × 4–6</td></tr><tr><td><div class="ex-name">Incline Barbell Press</div><div class="ex-target">Upper chest</div></td><td></td><td class="ex-reps">4 × 8–10</td></tr><tr><td><div class="ex-name">Dumbbell Arnold Press</div><div class="ex-target">Shoulders</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Cable Lateral Raise</div><div class="ex-target">Side delts</div></td><td></td><td class="ex-reps">4 × 15–20</td></tr><tr><td><div class="ex-name">Weighted Dips</div><div class="ex-target">Chest/triceps</div></td><td></td><td class="ex-reps">3 × 8–10</td></tr><tr><td><div class="ex-name">Skull Crushers</div><div class="ex-target">Triceps</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Cable Pushdown (straight)</div><div class="ex-target">Triceps</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr></table></div>
+
+  <div class="workout-day"><div class="wd-head"><div><div class="wd-title" style="color:var(--protein)">Pull B</div><div class="wd-badge">FRI · WIDTH + BICEPS</div></div><div style="font-size:22px">💪</div></div><table class="wtable"><tr><th>Exercise</th><th>Muscle</th><th>Sets × Reps</th></tr><tr><td><div class="ex-name">Deadlift</div><div class="ex-target">Primary compound</div></td><td></td><td class="ex-reps">4 × 3–5</td></tr><tr><td><div class="ex-name">Weighted Pull-Ups</div><div class="ex-target">Lats/back</div></td><td></td><td class="ex-reps">4 × 6–10</td></tr><tr><td><div class="ex-name">Single-Arm DB Row</div><div class="ex-target">Back</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Cable Pullover</div><div class="ex-target">Lats</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr><tr><td><div class="ex-name">Reverse Pec Deck</div><div class="ex-target">Rear delts</div></td><td></td><td class="ex-reps">3 × 15</td></tr><tr><td><div class="ex-name">Incline DB Curl</div><div class="ex-target">Biceps</div></td><td></td><td class="ex-reps">3 × 10–12</td></tr><tr><td><div class="ex-name">Cable Curl</div><div class="ex-target">Biceps</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr></table></div>
+
+  <div class="workout-day" style="margin-bottom:20px"><div class="wd-head"><div><div class="wd-title" style="color:var(--carbs)">Legs B</div><div class="wd-badge">SAT · POSTERIOR CHAIN</div></div><div style="font-size:22px">🦵</div></div><table class="wtable"><tr><th>Exercise</th><th>Muscle</th><th>Sets × Reps</th></tr><tr><td><div class="ex-name">Romanian Deadlift (heavy)</div><div class="ex-target">Primary compound</div></td><td></td><td class="ex-reps">4 × 6–8</td></tr><tr><td><div class="ex-name">Barbell Hip Thrust</div><div class="ex-target">Glutes</div></td><td></td><td class="ex-reps">4 × 10–12</td></tr><tr><td><div class="ex-name">Lying Leg Curl</div><div class="ex-target">Hamstrings</div></td><td></td><td class="ex-reps">4 × 10–12</td></tr><tr><td><div class="ex-name">Bulgarian Split Squat</div><div class="ex-target">Quads/glutes</div></td><td></td><td class="ex-reps">3 × 10/leg</td></tr><tr><td><div class="ex-name">Leg Press (feet high)</div><div class="ex-target">Glute bias</div></td><td></td><td class="ex-reps">3 × 12–15</td></tr><tr><td><div class="ex-name">Standing Calf Raise</div><div class="ex-target">Calves</div></td><td></td><td class="ex-reps">4 × 12–15</td></tr><tr><td><div class="ex-name">Cable Crunch</div><div class="ex-target">Core</div></td><td></td><td class="ex-reps">3 × 15</td></tr></table></div>
+</div>
+
+<!-- ══ MACROS TAB ══ -->
+
+<div id="tab-macros" class="tab-content">
+  <div class="hero" style="padding-bottom:20px">
+    <div class="hero-grid"></div><div class="hero-glow"></div>
+    <div class="hero-tag">▶ Evidence-Based Nutrition</div>
+    <div class="hero-title"><div class="fire">MACRO</div><div class="thin">GUIDE</div></div>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">Your Daily Targets</div><div class="sec-line"></div></div>
+  <div class="mgcard">
+    <div class="mgcard-title">Macro Breakdown</div>
+    <div class="mgrow"><div class="mgdot p"></div><div class="mgrow-body"><div class="mgrow-title" style="color:var(--protein)">Protein</div><div class="mgrow-val p">195g/day · 0.97g per lb bodyweight</div><div class="mgrow-desc">Repairs and builds muscle. Spread across all 6 meals (~32g each). Sources: chicken, eggs, whey, salmon, Greek yogurt, cottage cheese.</div></div></div>
+    <div class="mgrow"><div class="mgdot c"></div><div class="mgrow-body"><div class="mgrow-title" style="color:var(--carbs)">Carbohydrates</div><div class="mgrow-val c">430g/day · 46% of total calories</div><div class="mgrow-desc">Primary fuel for heavy training. Front-load carbs pre and post workout. Sources: oats, white rice, sweet potato, quinoa, banana, fruit.</div></div></div>
+    <div class="mgrow"><div class="mgdot f"></div><div class="mgrow-body"><div class="mgrow-title" style="color:var(--fat)">Fats</div><div class="mgrow-val f">95g/day · 23% of total calories</div><div class="mgrow-desc">Supports testosterone and joint health. Keep lower around training. Sources: salmon, eggs, avocado, olive oil, nuts, peanut butter.</div></div></div>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">Your Calorie Numbers</div><div class="sec-line"></div></div>
+  <div class="mgcard">
+    <div class="mgcard-title">TDEE Breakdown</div>
+    <div class="mgrow"><div style="font-size:18px;flex-shrink:0;margin-top:3px">🔥</div><div class="mgrow-body"><div class="mgrow-title">BMR</div><div class="mgrow-val acc">~2,020 kcal · calories burned at rest</div><div class="mgrow-desc">Mifflin-St Jeor formula: (10×91)+(6.25×180)−(5×25)+5. Based on 200 lbs/91kg, assumed 5'11"/180cm, age 25. Plug your exact height into tdeecalculator.net.</div></div></div>
+    <div class="mgrow"><div style="font-size:18px;flex-shrink:0;margin-top:3px">⚡</div><div class="mgrow-body"><div class="mgrow-title">TDEE (Maintenance)</div><div class="mgrow-val acc">~3,485 kcal · BMR × 1.725</div><div class="mgrow-desc">Calories you burn daily training 6 days/week. Eat at this number = weight stays the same. This is your baseline.</div></div></div>
+    <div class="mgrow"><div style="font-size:18px;flex-shrink:0;margin-top:3px">📈</div><div class="mgrow-body"><div class="mgrow-title">Lean Bulk Target</div><div class="mgrow-val acc">3,720 kcal · TDEE + ~235 surplus</div><div class="mgrow-desc">Small surplus = muscle gain with minimal fat. Target 0.25–0.5 lb/week. Adjust ±150 cal every 2–3 weeks based on results.</div></div></div>
+  </div>
+
+  <div class="sec-hdr"><div class="sec-title">Supplement Stack</div><div class="sec-line"></div></div>
+  <div class="mgcard" style="margin-bottom:20px">
+    <div class="mgcard-title">Evidence-Based Only</div>
+    <div class="mgrow"><div style="font-size:16px;flex-shrink:0;margin-top:3px">💊</div><div class="mgrow-body"><div class="mgrow-title">Creatine Monohydrate</div><div class="mgrow-val acc">3–5g daily · Any time of day</div><div class="mgrow-desc">Most researched supplement in existence. Increases strength, power, and muscle volume. Non-negotiable for advanced lifters.</div></div></div>
+    <div class="mgrow"><div style="font-size:16px;flex-shrink:0;margin-top:3px">🥛</div><div class="mgrow-body"><div class="mgrow-title">Whey Protein</div><div class="mgrow-val acc">1–2 scoops · Post-workout + snacks</div><div class="mgrow-desc">Fast-absorbing protein. Use to conveniently hit 195g/day. Not required if getting enough from whole food.</div></div></div>
+    <div class="mgrow"><div style="font-size:16px;flex-shrink:0;margin-top:3px">☕</div><div class="mgrow-body"><div class="mgrow-title">Caffeine</div><div class="mgrow-val acc">150–200mg · 30 min pre-training</div><div class="mgrow-desc">Proven to increase strength output and endurance. Black coffee works perfectly — no need for expensive pre-workouts. Cap at 400mg/day.</div></div></div>
+    <div class="mgrow"><div style="font-size:16px;flex-shrink:0;margin-top:3px">😴</div><div class="mgrow-body"><div class="mgrow-title">Casein Protein</div><div class="mgrow-val acc">Before bed · Optional</div><div class="mgrow-desc">Slow-digesting, feeds muscles overnight. Cottage cheese is a perfect natural substitute — equally effective and cheaper.</div></div></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+
+<nav class="bottom-nav">
+  <div class="nav-item active" id="nav-meals" onclick="switchTab('meals')"><div class="nav-icon">🍽️</div><div class="nav-label">Meals</div></div>
+  <div class="nav-item" id="nav-workout" onclick="switchTab('workout')"><div class="nav-icon">💪</div><div class="nav-label">Workout</div></div>
+  <div class="nav-item" id="nav-macros" onclick="switchTab('macros')"><div class="nav-icon">📊</div><div class="nav-label">Macros</div></div>
+</nav>
+
+<script>
+const KEY = 'leanBulk_v2';
+const GOALS = {cal:3720,pro:195,carb:430,fat:95};
+let state = {eaten:[],open:-1,tab:'meals',date:''};
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY)||'{}');
+    if (s.date !== today()) s.eaten = [];
+    state = Object.assign(state, s);
+  } catch(e){}
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify({...state, date:today()})); } catch(e){}
+}
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function switchTab(t) {
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('nav-'+t).classList.add('active');
+  state.tab = t; save(); window.scrollTo(0,0);
+}
+
+function toggleMeal(i) {
+  const isOpen = state.open === i;
+  document.querySelectorAll('.meal-card').forEach(c=>c.classList.remove('open'));
+  state.open = isOpen ? -1 : i;
+  if (!isOpen) document.getElementById('meal-'+i).classList.add('open');
+  save();
+}
+
+function toggleEaten(i) {
+  const idx = state.eaten.indexOf(i);
+  if (idx===-1) state.eaten.push(i); else state.eaten.splice(idx,1);
+  render(); save();
+}
+
+function resetDay() {
+  state.eaten=[]; state.open=-1;
+  document.querySelectorAll('.meal-card').forEach(c=>c.classList.remove('eaten','open'));
+  update(); save();
+}
+
+function render() {
+  document.querySelectorAll('.meal-card').forEach((c,i)=>{
+    c.classList.toggle('eaten', state.eaten.includes(i));
+  });
+  update();
+}
+
+function update() {
+  let t={cal:0,pro:0,carb:0,fat:0};
+  state.eaten.forEach(i=>{
+    const c=document.getElementById('meal-'+i);
+    if(!c)return;
+    t.cal+=+c.dataset.cal; t.pro+=+c.dataset.pro;
+    t.carb+=+c.dataset.carb; t.fat+=+c.dataset.fat;
+  });
+  // ring
+  const circ = 2*Math.PI*38;
+  const pct = Math.min(t.cal/GOALS.cal,1);
+  document.getElementById('cal-ring').style.strokeDashoffset = circ*(1-pct);
+  document.getElementById('cal-ring').style.strokeDasharray = circ;
+  document.getElementById('ring-num').textContent = t.cal.toLocaleString();
+  const rem = GOALS.cal - t.cal;
+  const el = document.getElementById('cal-rem');
+  el.innerHTML = rem>0 ? `${rem.toLocaleString()} <span>remaining</span>` : `<span style="color:var(--green)">Goal Hit! 🔥</span>`;
+  // bars
+  const bar=(bid,nid,v,g,u)=>{
+    document.getElementById(bid).style.width=Math.min(v/g*100,100)+'%';
+    document.getElementById(nid).textContent=`${v}/${g}${u}`;
+  };
+  bar('bar-p','num-p',t.pro,GOALS.pro,'g');
+  bar('bar-c','num-c',t.carb,GOALS.carb,'g');
+  bar('bar-f','num-f',t.fat,GOALS.fat,'g');
+}
+
+function setDate() {
+  const d=new Date();
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('today-date').textContent=`${days[d.getDay()]} ${mo[d.getMonth()]} ${d.getDate()}`;
+}
+
+// PWA
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('install-banner').classList.add('show');
+});
+document.getElementById('install-btn').addEventListener('click',async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  document.getElementById('install-banner').classList.remove('show');
+});
+document.getElementById('dismiss-btn').addEventListener('click',()=>{
+  document.getElementById('install-banner').classList.remove('show');
+});
+// iOS hint
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!navigator.standalone&&!localStorage.getItem('ios_hint')){
+  const b=document.getElementById('install-banner');
+  b.querySelector('p').innerHTML='<strong>📲 Add to Home Screen</strong>Tap Share → "Add to Home Screen" to save this app';
+  b.querySelector('#install-btn').style.display='none';
+  b.classList.add('show');
+  localStorage.setItem('ios_hint','1');
+}
+
+// INIT
+load(); setDate(); render();
+if(state.tab) switchTab(state.tab);
+if(state.open>-1) document.getElementById('meal-'+state.open)?.classList.add('open');
+</script>
+
+</body>
+</html>
